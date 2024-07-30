@@ -25,13 +25,17 @@ public struct LineView: View {
     @State private var opacity:Double = 0
     @State private var currentDataNumber: Double = 0
     @State private var hideHorizontalLines: Bool = false
+    public var xAxisLabels: [String]
+    public var yAxisLabels: [String]
     
     public init(data: [Double],
                 title: String? = nil,
                 legend: String? = nil,
                 style: ChartStyle = Styles.lineChartStyleOne,
                 valueSpecifier: String? = "%.1f",
-                legendSpecifier: String? = "%.2f") {
+                legendSpecifier: String? = "%.2f",
+                xAxisLabels: [String],
+                yAxisLabels: [String]) {
         
         self.data = ChartData(points: data)
         self.title = title
@@ -40,6 +44,8 @@ public struct LineView: View {
         self.valueSpecifier = valueSpecifier!
         self.legendSpecifier = legendSpecifier!
         self.darkModeStyle = style.darkModeStyle != nil ? style.darkModeStyle! : Styles.lineViewDarkMode
+        self.xAxisLabels = xAxisLabels
+        self.yAxisLabels = yAxisLabels
     }
     
     public var body: some View {
@@ -63,7 +69,11 @@ public struct LineView: View {
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
                         if(self.showLegend){
                             Legend(data: self.data,
-                                   frame: .constant(reader.frame(in: .local)), hideHorizontalLines: self.$hideHorizontalLines, specifier: legendSpecifier)
+                                   frame: .constant(reader.frame(in: .local)),
+                                   hideHorizontalLines: self.$hideHorizontalLines,
+                                   specifier: legendSpecifier,
+                                   xAxisLabels: xAxisLabels,
+                                   yAxisLabels: yAxisLabels)
                                 .transition(.opacity)
                                 .animation(Animation.easeOut(duration: 1).delay(1))
                         }
@@ -125,11 +135,17 @@ public struct LineView: View {
 struct LineView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            LineView(data: [8,23,54,32,12,37,7,23,43], title: "Full chart", style: Styles.lineChartStyleOne)
+            LineView(data: [8,23,54,32,12,37,7,23,43],
+                     title: "Full chart",
+                     style: Styles.lineChartStyleOne,
+                     xAxisLabels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"],
+                     yAxisLabels: ["0", "10", "20", "30", "40", "50"])
             
-            LineView(data: [282.502, 284.495, 283.51, 285.019, 285.197, 286.118, 288.737, 288.455, 289.391, 287.691, 285.878, 286.46, 286.252, 284.652, 284.129, 284.188], title: "Full chart", style: Styles.lineChartStyleOne)
-            
+            LineView(data: [282.502, 284.495, 283.51, 285.019, 285.197, 286.118, 288.737, 288.455, 289.391, 287.691, 285.878, 286.46, 286.252, 284.652, 284.129, 284.188],
+                     title: "Full chart",
+                     style: Styles.lineChartStyleOne,
+                     xAxisLabels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"],
+                     yAxisLabels: ["280", "282", "284", "286", "288", "290"])
         }
     }
 }
-
