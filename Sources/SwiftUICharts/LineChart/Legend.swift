@@ -57,7 +57,24 @@ struct Legend: View {
                
             }
             
+            // Add X-axis labels
+            HStack(spacing: 0) {
+                ForEach(0..<data.points.count, id: \.self) { index in
+                    if index % (data.points.count / 5) == 0 {
+                        Text(formatDate(index))
+                            .font(.caption)
+                            .frame(width: stepWidth * CGFloat(data.points.count / 5))
+                    }
+                }
+            }
+            .offset(y: frame.height + 10)
+            
         }
+    }
+    
+    func formatDate(_ index: Int) -> String {
+        // Implement date formatting logic here
+        return "Day \(index)"
     }
     
     func getYLegendSafe(height:Int)->CGFloat{
@@ -84,10 +101,19 @@ struct Legend: View {
     
     func getYLegend() -> [Double]? {
         let points = self.data.onlyPoints()
-        guard let max = points.max() else { return nil }
-        guard let min = points.min() else { return nil }
-        let step = Double(max - min)/4
-        return [min+step * 0, min+step * 1, min+step * 2, min+step * 3, min+step * 4]
+        guard let max = points.max(), let min = points.min() else { return nil }
+        let step = (max - min) / 4
+        return (0...4).map { min + step * Double($0) }
+    }
+
+    func formatSubscriberCount(_ value: Double) -> String {
+        if value >= 1_000_000 {
+            return String(format: "%.1fM", value / 1_000_000)
+        } else if value >= 1_000 {
+            return String(format: "%.1fK", value / 1_000)
+        } else {
+            return String(format: "%.0f", value)
+        }
     }
 }
 
