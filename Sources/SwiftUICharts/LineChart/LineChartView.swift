@@ -74,14 +74,13 @@ public struct LineChartView: View {
                         }
                         HStack {
                             
-                            if let rateValue = self.rateValue
-                            {
-                                if (rateValue ?? 0 >= 0){
+                            if let rateValue = self.rateValue {
+                                if (rateValue >= 0) {
                                     Image(systemName: "arrow.up")
-                                }else{
+                                } else {
                                     Image(systemName: "arrow.down")
                                 }
-                                Text("\(rateValue!)%")
+                                Text("\(rateValue)%")
                             }
                         }
                     }
@@ -128,7 +127,7 @@ public struct LineChartView: View {
     @discardableResult func getClosestDataPoint(toPoint: CGPoint, width:CGFloat, height: CGFloat) -> CGPoint {
         let points = self.data.onlyPoints()
         let stepWidth: CGFloat = width / CGFloat(points.count-1)
-        let stepHeight: CGFloat = height / CGFloat(points.max() + points.min())
+        let stepHeight: CGFloat = height / CGFloat((points.max() ?? 0) + (points.min() ?? 0))
         
         let index:Int = Int(round((toPoint.x)/stepWidth))
         if (index >= 0 && index < points.count){
@@ -142,10 +141,16 @@ public struct LineChartView: View {
 struct WidgetView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            LineChartView(data: [8,23,54,32,12,37,7,23,43], title: "Line chart", legend: "Basic")
+            LineChartView(data: [8,23,54,32,12,37,7,23,43],
+                          title: "Line chart",
+                          legend: "Basic",
+                          rateValue: 5)  // Added rateValue
                 .environment(\.colorScheme, .light)
             
-            LineChartView(data: [282.502, 284.495, 283.51, 285.019, 285.197, 286.118, 288.737, 288.455, 289.391, 287.691, 285.878, 286.46, 286.252, 284.652, 284.129, 284.188], title: "Line chart", legend: "Basic")
+            LineChartView(data: [282.502, 284.495, 283.51, 285.019, 285.197, 286.118, 288.737, 288.455, 289.391, 287.691, 285.878, 286.46, 286.252, 284.652, 284.129, 284.188],
+                          title: "Line chart",
+                          legend: "Basic", 
+                          rateValue: -2)  // Added rateValue
             .environment(\.colorScheme, .light)
         }
     }
