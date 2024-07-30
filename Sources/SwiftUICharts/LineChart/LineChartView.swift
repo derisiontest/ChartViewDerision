@@ -88,7 +88,7 @@ public struct LineChartView: View {
                              maxDataValue: .constant(nil)
                         )
                     }
-                    .frame(width: frame.width, height: 250) // Adjusted chart height
+                    .frame(width: frame.width, height: 220) // Increased to 220
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     
                     if self.showIndicatorDot {
@@ -101,9 +101,9 @@ public struct LineChartView: View {
                                     .shadow(color: Colors.LegendColor, radius: 3, x: 0, y: 0)
                             )
                             .offset(x: self.touchLocation.x - frame.width/2, y: -30)
-                            .animation(.easeIn)
                     }
                 }
+                .frame(width: self.formSize.width, height: 260) // Increased to accommodate the larger chart
             }
             .frame(width: self.formSize.width, height: 180)
         }

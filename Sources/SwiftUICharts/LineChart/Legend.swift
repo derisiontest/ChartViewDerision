@@ -15,6 +15,8 @@ struct Legend: View {
     @Environment(\.colorScheme) var colorScheme: ColorScheme
     var specifier: String = "%.2f"
     let padding:CGFloat = 3
+    var xAxisLabels: [String]
+    var yAxisLabels: [String]
 
     var stepWidth: CGFloat {
         if data.points.count < 2 {
@@ -41,12 +43,13 @@ struct Legend: View {
     
     var body: some View {
         ZStack(alignment: .topLeading){
-            ForEach((0...4), id: \.self) { height in
+            ForEach(0..<yAxisLabels.count, id: \.self) { height in
                 HStack(alignment: .center){
-                    Text("\(self.getYLegendSafe(height: height), specifier: specifier)").offset(x: 0, y: self.getYposition(height: height) )
+                    Text(yAxisLabels[height])
+                        .offset(x: 0, y: self.getYposition(height: height))
                         .foregroundColor(Colors.LegendText)
                         .font(.caption)
-                    self.line(atHeight: self.getYLegendSafe(height: height), width: self.frame.width)
+                    self.line(atHeight: CGFloat(height) * stepHeight, width: self.frame.width)
                         .stroke(self.colorScheme == .dark ? Colors.LegendDarkColor : Colors.LegendColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5,height == 0 ? 0 : 10]))
                         .opacity((self.hideHorizontalLines && height != 0) ? 0 : 1)
                         .rotationEffect(.degrees(180), anchor: .center)
@@ -54,48 +57,28 @@ struct Legend: View {
                         .animation(.easeOut(duration: 0.2))
                         .clipped()
                 }
-               
             }
             
-            // Add X-axis labels
+            // X-axis labels
             HStack(spacing: 0) {
-                ForEach(0..<data.points.count, id: \.self) { index in
-                    if index % (data.points.count / 5) == 0 {
-                        Text(formatDate(index))
-                            .font(.caption)
-                            .frame(width: stepWidth * CGFloat(data.points.count / 5))
-                    }
+                ForEach(0..<xAxisLabels.count, id: \.self) { index in
+                    Text(xAxisLabels[index])
+                        .font(.caption)
+                        .frame(width: stepWidth * CGFloat(data.points.count / (xAxisLabels.count - 1)))
                 }
             }
             .offset(y: frame.height + 10)
-            
         }
     }
     
-    func formatDate(_ index: Int) -> String {
-        // Implement date formatting logic here
-        return "Day \(index)"
-    }
-    
-    func getYLegendSafe(height:Int)->CGFloat{
-        if let legend = getYLegend() {
-            return CGFloat(legend[height])
-        }
-        return 0
-    }
-    
-    func getYposition(height: Int)-> CGFloat {
-        if let legend = getYLegend() {
-            return (self.frame.height-((CGFloat(legend[height]) - min)*self.stepHeight))-(self.frame.height/2)
-        }
-        return 0
-       
+    func getYposition(height: Int) -> CGFloat {
+        return (self.frame.height - (CGFloat(height) * stepHeight)) - (self.frame.height / 2)
     }
     
     func line(atHeight: CGFloat, width: CGFloat) -> Path {
         var hLine = Path()
-        hLine.move(to: CGPoint(x:5, y: (atHeight-min)*stepHeight))
-        hLine.addLine(to: CGPoint(x: width, y: (atHeight-min)*stepHeight))
+        hLine.move(to: CGPoint(x:5, y: atHeight))
+        hLine.addLine(to: CGPoint(x: width, y: atHeight))
         return hLine
     }
     
@@ -120,7 +103,11 @@ struct Legend: View {
 struct Legend_Previews: PreviewProvider {
     static var previews: some View {
         GeometryReader{ geometry in
-            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]), frame: .constant(geometry.frame(in: .local)), hideHorizontalLines: .constant(false))
+            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]),
+                   frame: .constant(geometry.frame(in: .local)),
+                   hideHorizontalLines: .constant(false),
+                   xAxisLabels: ["Day 1", "Day 7", "Day 14", "Day 21", "Day 30"],
+                   yAxisLabels: ["0", "1K", "2K", "3K", "4K", "5K"])
         }.frame(width: 320, height: 200)
     }
 }
