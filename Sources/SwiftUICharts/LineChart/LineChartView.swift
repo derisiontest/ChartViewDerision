@@ -1,5 +1,5 @@
 //
-//  LineCard.swift
+//  LineCard.swift testdzadzada
 //  LineChart
 //
 //  Created by András Samu on 2019. 08. 31..
