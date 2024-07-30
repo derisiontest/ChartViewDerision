@@ -10,24 +10,26 @@ import SwiftUI
 
 public struct LineChartView: View {
     @Environment(\.colorScheme) var colorScheme: ColorScheme
-    @ObservedObject var data:ChartData
+    @ObservedObject var data: ChartData
     public var title: String
     public var legend: String?
     public var style: ChartStyle
     public var darkModeStyle: ChartStyle
     
-    public var formSize:CGSize
+    public var formSize: CGSize
     public var dropShadow: Bool
-    public var valueSpecifier:String
+    public var valueSpecifier: String
     
-    @State private var touchLocation:CGPoint = .zero
+    public var xAxisLabels: [String]
+    public var yAxisLabels: [String]
+    
+    @State private var touchLocation: CGPoint = .zero
     @State private var showIndicatorDot: Bool = false
     @State private var currentValue: Double = 2 {
-        didSet{
+        didSet {
             if (oldValue != self.currentValue && showIndicatorDot) {
                 HapticFeedback.playSelection()
             }
-            
         }
     }
     var frame = CGSize(width: 180, height: 120)
@@ -40,7 +42,9 @@ public struct LineChartView: View {
                 form: CGSize? = ChartForm.medium,
                 rateValue: Int?,
                 dropShadow: Bool? = true,
-                valueSpecifier: String? = "%.1f") {
+                valueSpecifier: String? = "%.1f",
+                xAxisLabels: [String],
+                yAxisLabels: [String]) {
         
         self.data = ChartData(points: data)
         self.title = title
@@ -52,13 +56,15 @@ public struct LineChartView: View {
         self.dropShadow = dropShadow!
         self.valueSpecifier = valueSpecifier!
         self.rateValue = rateValue
+        self.xAxisLabels = xAxisLabels
+        self.yAxisLabels = yAxisLabels
     }
     
     public var body: some View {
         ZStack(alignment: .center) {
             RoundedRectangle(cornerRadius: 20)
                 .fill(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
-                .frame(width: frame.width, height: 180, alignment: .center) // Further reduced height
+                .frame(width: frame.width, height: 180, alignment: .center)
                 .shadow(color: self.style.dropShadowColor, radius: self.dropShadow ? 8 : 0)
             
             VStack(alignment: .leading, spacing: 0) {
@@ -88,7 +94,7 @@ public struct LineChartView: View {
                              maxDataValue: .constant(nil)
                         )
                     }
-                    .frame(width: frame.width, height: 220) // Increased to 220
+                    .frame(width: frame.width, height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     
                     if self.showIndicatorDot {
@@ -103,9 +109,31 @@ public struct LineChartView: View {
                             .offset(x: self.touchLocation.x - frame.width/2, y: -30)
                     }
                 }
-                .frame(width: self.formSize.width, height: 260) // Increased to accommodate the larger chart
+                .frame(width: self.formSize.width, height: 260)
             }
             .frame(width: self.formSize.width, height: 180)
+            
+            // Add X and Y axis labels
+            VStack {
+                HStack {
+                    ForEach(yAxisLabels, id: \.self) { label in
+                        Text(label)
+                            .font(.caption)
+                            .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.legendTextColor : self.style.legendTextColor)
+                    }
+                    Spacer()
+                }
+                Spacer()
+                HStack {
+                    ForEach(xAxisLabels, id: \.self) { label in
+                        Text(label)
+                            .font(.caption)
+                            .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.legendTextColor : self.style.legendTextColor)
+                        Spacer()
+                    }
+                }
+            }
+            .padding()
         }
         .gesture(DragGesture()
             .onChanged({ value in
@@ -139,13 +167,17 @@ struct WidgetView_Previews: PreviewProvider {
             LineChartView(data: [8,23,54,32,12,37,7,23,43],
                           title: "Line chart",
                           legend: "Basic",
-                          rateValue: 5)  // Added rateValue
+                          rateValue: 5,
+                          xAxisLabels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+                          yAxisLabels: ["0", "20", "40", "60"])
                 .environment(\.colorScheme, .light)
             
             LineChartView(data: [282.502, 284.495, 283.51, 285.019, 285.197, 286.118, 288.737, 288.455, 289.391, 287.691, 285.878, 286.46, 286.252, 284.652, 284.129, 284.188],
                           title: "Line chart",
-                          legend: "Basic", 
-                          rateValue: -2)  // Added rateValue
+                          legend: "Basic",
+                          rateValue: -2,
+                          xAxisLabels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+                          yAxisLabels: ["280", "285", "290"])
             .environment(\.colorScheme, .light)
         }
     }
