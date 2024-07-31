@@ -173,7 +173,7 @@ public struct LineView: View {
                                 .frame(width: (geometry.size.width - 40) / CGFloat(visibleXAxisLabels.count))
                         }
                     }
-                    .padding(.leading, 40)  // Align with the chart area
+                    .padding(.leading, 30)  // Align with the chart area
                     .frame(height: 20)
                     .fixedSize(horizontal: false, vertical: true)
                     
