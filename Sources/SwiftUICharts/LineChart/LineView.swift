@@ -123,6 +123,7 @@ public struct LineView: View {
                             }
                             .frame(width: 40)
                             .padding(.leading, 0)
+                            .padding(.trailing, 4)
                             
                             // Main chart area
                             ZStack {
