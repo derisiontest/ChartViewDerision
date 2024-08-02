@@ -215,15 +215,15 @@ public struct LineView: View {
     }
     
     private func getYAxisLabels() -> [String] {
-        let dataMin = 0.0
-        let dataMax = (data.points.map { $0.1 }.max() ?? overallMaxDataValue) * 1.08 // Add 5% padding
+        let dataMin = data.points.map { $0.1 }.min() ?? 0
+        let dataMax = (data.points.map { $0.1 }.max() ?? overallMaxDataValue) * 1.05 // Add 5% padding
         let range = dataMax - dataMin
         let step = range / Double(yAxisDivisions)
         
-        return (0...yAxisDivisions).reversed().map { index in
+        return (0...yAxisDivisions).map { index in
             let value = dataMin + (step * Double(index))
             return formatSubscriberCount(value)
-        }
+        }.reversed()
     }
 
     private func formatSubscriberCount(_ value: Double) -> String {
@@ -429,6 +429,7 @@ public struct Line: View {
         }
         return frame.size.width / CGFloat(data.points.count-1)
     }
+    
     var stepHeight: CGFloat {
         var min: Double?
         var max: Double?
@@ -437,7 +438,7 @@ public struct Line: View {
             min = minValue
             max = maxValue
         } else if let minPoint = points.min(), let maxPoint = points.max(), minPoint != maxPoint {
-            min = 0 // Start from 0
+            min = minPoint // Change this line from 0 to minPoint
             max = maxPoint * 1.05 // Add 5% padding to the top
         } else {
             return 0
@@ -447,18 +448,20 @@ public struct Line: View {
         }
         return 0
     }
+    
     var path: Path {
         let points = self.data.onlyPoints()
-        return curvedLines ? Path.quadCurvedPathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight), globalOffset: minDataValue ?? 0) : Path.linePathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight))
+        let minPoint = points.min() ?? 0
+        return curvedLines ? Path.quadCurvedPathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight), globalOffset: minPoint) : Path.linePathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight))
     }
 
     var closedPath: Path {
         let points = self.data.onlyPoints()
-        return curvedLines ? Path.quadClosedCurvedPathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight), globalOffset: minDataValue ?? 0) : Path.closedLinePathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight))
+        let minPoint = points.min() ?? 0
+        return curvedLines ? Path.quadClosedCurvedPathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight), globalOffset: minPoint) : Path.closedLinePathWithPoints(points: points, step: CGPoint(x: stepWidth, y: stepHeight))
     }
 
 
-    
     var valueSpecifier: String
     
     // Update the initializer to include valueSpecifier
@@ -541,53 +544,57 @@ public struct Line: View {
 
 
 struct LineView_Previews: PreviewProvider {
-    static func generateTestData() -> [Double] {
-        var data: [Double] = []
-        let startValue: Double = 10_000
-        let peakValue: Double = 2_000_000
-        let totalDays = 30
-        let growthDays = 24
-        let dropDay = 25
-        let riseDays = 5
-
-        // Calculate growth rate for the first 24 days
-        let growthRate = pow(peakValue / startValue, 1.0 / Double(growthDays - 1))
-        
-        // Growth phase (24 days)
-        for i in 0..<growthDays {
-            let value = startValue * pow(growthRate, Double(i))
-            data.append(value)
-        }
-        
-        // 30% drop (1 day)
-        let dropValue = data.last! * 0.7
-        data.append(dropValue)
-        
-        // 20% climb over 5 days
-        let targetValue = dropValue * 1.2
-        let riseRate = pow(targetValue / dropValue, 1.0 / Double(riseDays))
-        for i in 1...riseDays {
-            let value = dropValue * pow(riseRate, Double(i))
-            data.append(value)
-        }
-        
-        return data
+    static func generateTestData() -> [(String, Double)] {
+        return [
+            ("2024-06-29", 47677139),
+            ("2024-06-30", 47729454),
+            ("2024-07-01", 48433120),
+            ("2024-07-02", 48785951),
+            ("2024-07-03", 49258019),
+            ("2024-07-04", 49520259),
+            ("2024-07-05", 49781224),
+            ("2024-07-06", 49841027),
+            ("2024-07-07", 50418934),
+            ("2024-07-08", 50842182),
+            ("2024-07-09", 51074660),
+            ("2024-07-10", 51638906),
+            ("2024-07-11", 51808781),
+            ("2024-07-12", 51912496),
+            ("2024-07-13", 52208416),
+            ("2024-07-14", 52233480),
+            ("2024-07-15", 52220322),
+            ("2024-07-16", 52540808),
+            ("2024-07-18", 52673704),
+            ("2024-07-19", 53025378),
+            ("2024-07-20", 53070071),
+            ("2024-07-21", 53083204),
+            ("2024-07-22", 53113494),
+            ("2024-07-23", 53370374),
+            ("2024-07-25", 53543369),
+            ("2024-07-27", 53576429),
+            ("2024-07-28", 53477470),
+            ("2024-07-30", 53304564),
+            ("2024-07-31", 53218138),
+            ("2024-08-01", 53212529)
+        ]
     }
     
     static var previews: some View {
         Group {
             GeometryReader { geometry in
-                LineView(data: generateTestData(),
+                LineView(data: generateTestData().map { $0.1 },
+                         title: "Subscriber Growth",
+                         legend: "Last 30 Days",
                          style: Styles.lineChartStyleOne,
                          valueSpecifier: "%.0f",
                          legendSpecifier: "%.0f",
-                         xAxisLabels: generateDateLabels(),
+                         xAxisLabels: generateTestData().map { $0.0 },
                          visibleXAxisLabels: generateVisibleDateLabels(),
                          yAxisLabels: [],
                          yAxisDivisions: 5,
                          lineColor: .blue,
                          gradientColor: GradientColor(start: .blue, end: .purple),
-                         indicatorSuffix: "Members")
+                         indicatorSuffix: "Subscribers")
             }
             .previewLayout(.sizeThatFits)
             .frame(height: 400)
@@ -597,35 +604,22 @@ struct LineView_Previews: PreviewProvider {
         .padding(0)
     }
 
-    static func generateDateLabels() -> [String] {
-        let calendar = Calendar.current
-        let endDate = Date()
-        let startDate = calendar.date(byAdding: .day, value: -29, to: endDate)!
-        
-        return (0..<30).map { index in
-            let date = calendar.date(byAdding: .day, value: index, to: startDate)!
-            return formatDate(date, includeYear: true)
-        }
-    }
-
     static func generateVisibleDateLabels() -> [String] {
-        let labels = generateDateLabels().map { stripYearFromDate($0) }
-        let strideValue = max(1, labels.count / 5)
-        return Array(stride(from: 0, to: labels.count, by: strideValue)).map { labels[$0] }
-    }
-
-    static func formatDate(_ date: Date, includeYear: Bool = false) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = includeYear ? "d MMM yyyy" : "d MMM"
-        return formatter.string(from: date)
-    }
-
-    static func stripYearFromDate(_ dateString: String) -> String {
-        let components = dateString.components(separatedBy: " ")
-        if components.count >= 2 {
-            return components[0] + " " + components[1]
+        let allDates = generateTestData().map { $0.0 }
+        let strideValue = max(1, allDates.count / 5)
+        return stride(from: 0, to: allDates.count, by: strideValue).map { index in
+            let dateString = allDates[index]
+            return formatDate(dateString)
         }
-        print("Debug: Unable to strip year from date string: \(dateString)")
+    }
+
+    static func formatDate(_ dateString: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        if let date = dateFormatter.date(from: dateString) {
+            dateFormatter.dateFormat = "d MMM"
+            return dateFormatter.string(from: date)
+        }
         return dateString
     }
 }
